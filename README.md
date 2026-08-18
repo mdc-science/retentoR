@@ -1,7 +1,7 @@
 # retentoR
 
-**Author:** Daniel Moreira ([danielcarmor@gmail.com](mailto:danielcarmor@gmail.com))
-**Institution:** i3S – Instituto de Investigação e Inovação em Saúde, Porto, Portugal
+**Author:** Daniel Moreira ([danielcarmor@gmail.com](mailto:danielcarmor@gmail.com))  
+**Institution:** i3S – Instituto de Investigação e Inovação em Saúde, Porto, Portugal    
 **Language:** R
 
 ---
