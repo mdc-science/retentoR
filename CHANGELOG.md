@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ## [1.1.0] - 2026-08-18
 
+DOI: [10.5281/zenodo.21998479](https://doi.org/10.5281/zenodo.21998479) (concept DOI, resolves to latest version: [10.5281/zenodo.21997256](https://doi.org/10.5281/zenodo.21997256)).
+
 ### Added
 - `read_shimadzu_injection.R` — reader for native Shimadzu LabSolutions ASCII (`.txt`) chromatogram exports (single- and multi-channel), returning the same per-injection shape `read_generic_excel_injection.R` does. Since a raw export carries no analyte name, target retention time, purity window, or sample dilution (domain knowledge, not instrument output), those come from a companion per-experiment `injection_metadata.csv`, one row per injection.
 - `process_shimadzu_purity.R` and `process_shimadzu_std_curve.R` — Shimadzu counterparts of the generic-Excel analysis scripts; everything past reading `injections` is intentionally identical between the two formats.
