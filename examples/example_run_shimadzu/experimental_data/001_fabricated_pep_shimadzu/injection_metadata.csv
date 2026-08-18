@@ -1,0 +1,7 @@
+filename,analyte,injection_date,target_rt,rt_window_min,rt_window_max,sample_dilution
+STD_1_uM.txt,PEP,2026.08.19,15.2,8,25,1
+STD_10_uM.txt,PEP,2026.08.19,15.2,8,25,1
+STD_40_uM.txt,PEP,2026.08.19,15.2,8,25,1
+BLK_01.txt,PEP,2026.08.19,15.2,8,25,1
+SMP_A1.txt,PEP,2026.08.19,15.2,8,25,5
+SMP_A2.txt,PEP,2026.08.19,15.2,8,25,1

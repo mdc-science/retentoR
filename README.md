@@ -10,7 +10,7 @@
 
 ## Overview
 
-An R workflow for processing HPLC(-DAD) chromatogram data. Given a chromatogram (time vs. signal) and its peak table for each injection, in a simple instrument-agnostic Excel format, the workflow supports two analyses:
+An R workflow for processing HPLC(-DAD) chromatogram data. Given a chromatogram (time vs. signal) and its peak table for each injection, the workflow supports two analyses:
 
 1. **Purity** — for one injection, express each peak in a retention-time window as a percentage of the total peak area in that window.
 2. **Standard curve** — fit a calibration curve from a series of standard injections' peak area at a target retention time, back-calculate sample concentrations (correcting for injection volume and dilution), compute LoD/LoQ, and export a multi-panel summary figure.
@@ -19,7 +19,7 @@ A third, standalone script draws quick-look chromatogram plots (single file or a
 
 The scripts are `source()`d, not installed as a package — see [`examples/`](examples/) for runnable, fully self-contained demonstrations of each.
 
-This repo currently supports one raw-data format: a plain Excel workbook per injection (documented in full below). Parsing native Shimadzu LabSolutions `.txt` exports directly is planned but not yet implemented.
+Two raw-data formats are supported, documented in full below: a plain Excel workbook per injection (instrument-agnostic — fill it in from any integration software's export), and native Shimadzu LabSolutions `.txt` exports directly.
 
 ---
 
@@ -27,15 +27,21 @@ This repo currently supports one raw-data format: a plain Excel workbook per inj
 
 ```
 retentoR/
-├── read_generic_excel_injection.R        # shared workbook parser, sourced by the three scripts below
-├── process_generic_excel_purity.R        # purity analysis
-├── process_generic_excel_std_curve.R     # standard curve + back-calculation + summary PDF
-├── plot_chromatograms.R                  # quick-look chromatogram plotting, standalone
+├── read_generic_excel_injection.R        # generic-Excel workbook parser
+├── process_generic_excel_purity.R        # purity analysis, generic-Excel input
+├── process_generic_excel_std_curve.R     # standard curve + back-calculation + summary PDF, generic-Excel input
+├── read_shimadzu_injection.R             # Shimadzu LabSolutions .txt parser
+├── process_shimadzu_purity.R             # purity analysis, Shimadzu input
+├── process_shimadzu_std_curve.R          # standard curve + back-calculation + summary PDF, Shimadzu input
+├── plot_chromatograms.R                  # quick-look chromatogram plotting, standalone, generic-Excel input only so far
 └── examples/
     ├── example_run_generic_excel/            # standard-curve example (fabricated "PEP" standards + samples)
     ├── example_run_generic_excel_purity/     # purity-only example (fabricated synthesis batches, no standards)
-    └── example_run_generic_excel_report/     # narrative per-sample R Markdown report, fully self-contained
+    ├── example_run_generic_excel_report/     # narrative per-sample R Markdown report, fully self-contained
+    └── example_run_shimadzu/                 # same "PEP" scenario, as native Shimadzu .txt exports
 ```
+
+Each analysis exists as two scripts — one per input format — that share everything except how the raw file gets parsed: `process_generic_excel_purity.R`/`process_shimadzu_purity.R`, and `process_generic_excel_std_curve.R`/`process_shimadzu_std_curve.R`.
 
 ---
 
@@ -156,11 +162,59 @@ See [`examples/example_run_generic_excel_report/`](examples/example_run_generic_
 
 ---
 
+## Raw data format: Shimadzu LabSolutions `.txt`
+
+The same two analyses also run directly against a native Shimadzu LabSolutions ASCII export — no manual transcription into Excel needed. `read_shimadzu_injection.R` reads a folder of `.txt` files; `process_shimadzu_purity.R`/`process_shimadzu_std_curve.R` use it the same way the generic-Excel scripts use `read_generic_excel_injection.R`.
+
+**Filename convention is identical** to the generic-Excel format (`STD_<conc>_<unit>.txt`, `SMP_<id>.txt`, `BLK...txt` — see the table above, just with a `.txt` extension).
+
+**What's parsed from the file itself:**
+
+- The chromatogram trace: either a single `R.Time (min)` / `Intensity` table (single-channel export), or one or more `[PDA Multi Chromatogram(ChN)]` blocks, each with its own `Wavelength(nm)` line and its own data table (multi-channel export — most DAD software exports this way even for a single wavelength of interest).
+- The peak table(s): one or more `[Peak Table(PDA-ChN)]` blocks, each channel's peaks tagged with that channel's wavelength and combined into one table — same idea as the generic-Excel format's multi-wavelength `Peak Areas` sheet.
+- `injection_volume`, from the file's own `Injection Volume` line.
+
+**What a raw export does *not* carry** — because it's domain knowledge, not instrument output — is an analyte name, target retention time, purity window, or sample dilution. Those come from a companion CSV, `injection_metadata.csv`, placed at the experiment root (sibling to `raw_data/`, same reasoning as `method.xlsx` above — never inside `raw_data/`, or it'll be mistaken for an injection file):
+
+| filename | analyte | injection_date | target_rt | rt_window_min | rt_window_max | sample_dilution |
+|---|---|---|---|---|---|---|
+| STD_10_uM.txt | PEP | 2026.08.19 | 15.2 | 8 | 25 | 1 |
+| SMP_A1.txt | PEP | 2026.08.19 | 15.2 | 8 | 25 | 5 |
+
+One row per injection file; this plays the same role the generic-Excel format's `Metadata` sheet plays, just out-of-band since a raw instrument export can't carry extra sheets. `analyte`/`injection_date`/`target_rt`/`rt_window_min`/`rt_window_max` must still be identical across every row for one experiment; `sample_dilution` is the one column expected to vary per sample.
+
+If any injection has more than one detector channel, pass which wavelength to use as its `chromatogram`:
+
+```r
+library(here)
+experiment_dir <- here("experimental_data", "001_my_experiment")
+wavelength <- 254   # only needed if a file has more than one channel
+source(here("process_shimadzu_std_curve.R"))   # or process_shimadzu_purity.R
+```
+
+Directory layout matches the generic-Excel format, just with `.txt` files and this CSV instead of `.xlsx` workbooks:
+
+```
+experimental_data/
+  001_my_experiment/
+    injection_metadata.csv
+    raw_data/
+      STD_1_uM.txt
+      STD_10_uM.txt
+      SMP_A1.txt
+      BLK_01.txt
+    processed_data/
+```
+
+**Unit note**: exported intensity is used as-is, with no scaling applied. Purity (%) and the standard-curve fit/LoD/LoQ are unit-agnostic as long as every injection in one experiment is on the same raw scale, which they inherently are (same instrument, same method) — so absolute intensity units don't matter here any more than they do for the generic-Excel format's `signal`/`peak_area` columns.
+
+---
+
 ## Outputs
 
-Both analysis scripts write into `experimental_data/<experiment>/processed_data/<analyte>/`, with `<date>` taken from every injection's `injection_date`:
+All four analysis scripts write into `experimental_data/<experiment>/processed_data/<analyte>/`, with `<date>` taken from every injection's `injection_date`. Output naming/content is identical regardless of which input format produced `injections` — `process_shimadzu_std_curve.R` and `process_shimadzu_purity.R` write exactly what's described below.
 
-**`process_generic_excel_std_curve.R`**
+**`process_generic_excel_std_curve.R` / `process_shimadzu_std_curve.R`**
 
 | File | Contents |
 |---|---|
@@ -168,7 +222,7 @@ Both analysis scripts write into `experimental_data/<experiment>/processed_data/
 | `<date>_<analyte>_levels.csv` | Back-calculated concentration per sample, with volume/dilution corrections and an `extrapolated` flag — only written if any `SMP` injections exist |
 | `<date>_<analyte>_analytical_performance.csv` | Fit slope/intercept/R², LoD, LoQ |
 
-**`process_generic_excel_purity.R`**
+**`process_generic_excel_purity.R` / `process_shimadzu_purity.R`**
 
 | File | Contents |
 |---|---|
@@ -181,4 +235,4 @@ Both analysis scripts write into `experimental_data/<experiment>/processed_data/
 
 ## Status
 
-`v1.0.0` released and archived on Zenodo (see DOI badge above). No package, no automated test suite — each `examples/` subfolder running or knitting without error is the correctness check.
+`v1.0.0` released and archived on Zenodo (see DOI badge above) — that release covers the generic-Excel workflow only; the Shimadzu `.txt` reader was added afterward and isn't part of a tagged release yet. No package, no automated test suite — each `examples/` subfolder running or knitting without error is the correctness check.

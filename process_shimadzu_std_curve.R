@@ -1,29 +1,41 @@
-# process_generic_excel_std_curve.R
+# process_shimadzu_std_curve.R
 #
 # Fits a standard curve from STD injections' peak area at `target_rt`, back-calculates
-# SMP concentrations, and writes a summary PDF + CSV outputs, using the generic-Excel
-# format documented in CLAUDE.md ("Generic Excel input format").
+# SMP concentrations, and writes a summary PDF + CSV outputs, from native Shimadzu
+# LabSolutions .txt exports (see read_shimadzu_injection.R for the format and why a
+# companion metadata CSV is needed).
 #
 # Caller must define, before sourcing:
 #   experiment_dir <- here("experimental_data", "001_my_experiment")
-# ...a folder containing `raw_data/` with one .xlsx per injection (Chromatogram, Peak
-# Areas, Metadata sheets; STD_/SMP_/BLK_ filename prefix). Every injection in the
-# experiment must share one `analyte`, `injection_date`, `target_rt`, `rt_window_min`,
-# `rt_window_max` (conditions never vary within an experiment, see CLAUDE.md).
+# ...a folder containing:
+#   raw_data/                  one .txt per injection (STD_/SMP_/BLK_ filename prefix)
+#   injection_metadata.csv     one row per injection: filename, analyte, injection_date,
+#                               target_rt, rt_window_min, rt_window_max, sample_dilution
+# Optionally define `wavelength` before sourcing, if any injection has more than one
+# detector channel (otherwise required per-file, see read_shimadzu_injection.R). Every
+# injection must share one `analyte`, `injection_date`, `target_rt`, `rt_window_min`,
+# `rt_window_max` (conditions never vary within an experiment, see the metadata CSV
+# note above).
 #
 # Writes, to experiment_dir/processed_data/<analyte>/:
 #   <date>_<analyte>_summary_results.pdf          chromatograms + signal + std curve + calc values
 #   <date>_<analyte>_levels.csv                    back-calculated sample concentrations (if any SMP)
 #   <date>_<analyte>_analytical_performance.csv    slope, intercept, R2, LoD, LoQ
 #
-# Every STD injection must share one injection_volume (the calibration reference volume).
-# Each SMP's peak area is scaled by std_injection_volume / its own injection_volume before
+# Every STD injection must share one injection_volume (parsed from each .txt's own
+# "Injection Volume" line, not the metadata CSV — see read_shimadzu_injection.R). Each
+# SMP's peak area is scaled by std_injection_volume / its own injection_volume before
 # back-calculation, so a sample injected at a different volume than the standards still
 # gets a correct predicted_conc (assumes peak area is linear in injected volume).
+#
+# Everything from here down (fits, plots, CSV outputs) is intentionally identical to
+# process_generic_excel_std_curve.R -- the only difference between the two scripts is
+# how `injections` gets built above. If you fix a bug in the analysis/plotting logic,
+# fix it in both scripts (this repo duplicates rather than shares per-format process
+# scripts, matching plateReadeR's convention -- see CLAUDE.md).
 
 library(here)
 library(tidyverse)
-library(readxl)
 library(scales)
 library(conflicted)
 library(ggthemes)
@@ -35,14 +47,16 @@ conflicts_prefer(here::here)
 conflicts_prefer(dplyr::filter)
 conflicts_prefer(ggplot2::annotate)
 
-source(here("read_generic_excel_injection.R"))
+source(here("read_shimadzu_injection.R"))
 
 if (!exists("experiment_dir")) {
-  stop("Define `experiment_dir` (path to the experiment folder) before sourcing process_generic_excel_std_curve.R")
+  stop("Define `experiment_dir` (path to the experiment folder) before sourcing process_shimadzu_std_curve.R")
 }
+if (!exists("wavelength")) wavelength <- NULL
 
 raw_dir <- here(experiment_dir, "raw_data")
-injections <- read_experiment(raw_dir)
+metadata_file <- here(experiment_dir, "injection_metadata.csv")
+injections <- read_shimadzu_experiment(raw_dir, metadata_file, wavelength = wavelength)
 shared_meta <- check_shared_meta(injections)
 analyte <- shared_meta$analyte
 injection_date <- shared_meta$injection_date
@@ -55,7 +69,9 @@ if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 
 # ---- Peak area at target_rt for every injection (closest peak within the rt window) ----
 # Restricted to the injection's own chromatogram wavelength, not just the rt window --
-# see the same note in process_generic_excel_purity.R's peaks_in_window().
+# a multi-channel export's combined peak table spans several detector channels, and
+# pooling peak areas measured at different wavelengths into one "total area" isn't
+# chemically meaningful (different molar absorptivity per wavelength).
 target_peak <- function(inj) {
   win <- inj$peaks %>% dplyr::filter(wavelength == inj$wavelength, r_time >= rt_window_min, r_time <= rt_window_max)
   if (nrow(win) == 0) {

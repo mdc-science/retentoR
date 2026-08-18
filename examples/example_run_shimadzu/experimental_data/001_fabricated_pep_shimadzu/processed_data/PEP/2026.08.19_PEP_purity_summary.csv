@@ -1,0 +1,7 @@
+sample_id,type,target_peak_id,target_purity_pct,n_peaks
+BLK_01,blk,2,46.34146341463414,2
+SMP_A1,smp,2,97.10877042132417,2
+SMP_A2,smp,2,99.4678295132382,2
+STD_1_uM,std,2,75,2
+STD_10_uM,std,2,97.16348968837421,2
+STD_40_uM,std,2,99.2449151562216,2
