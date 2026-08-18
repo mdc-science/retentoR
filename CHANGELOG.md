@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ## [1.0.0] - 2026-08-18
 
+DOI: [10.5281/zenodo.21997257](https://doi.org/10.5281/zenodo.21997257) (concept DOI, resolves to latest version: [10.5281/zenodo.21997256](https://doi.org/10.5281/zenodo.21997256)).
+
 ### Added
 - `process_generic_excel_purity.R` and `process_generic_excel_std_curve.R` — purity and standard-curve analyses for HPLC-DAD chromatogram data, from a generic, instrument-agnostic Excel input format (see `README.md`).
 - `plot_chromatograms.R` — standalone quick-look chromatogram plotting, a single workbook or a whole folder, overlaid or faceted, with optional top-N peak purity labels.

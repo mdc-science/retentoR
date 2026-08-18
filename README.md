@@ -1,7 +1,9 @@
 # retentoR
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21997256.svg)](https://doi.org/10.5281/zenodo.21997256)
+
 **Author:** Daniel Moreira ([danielcarmor@gmail.com](mailto:danielcarmor@gmail.com))  
-**Institution:** i3S – Instituto de Investigação e Inovação em Saúde, Porto, Portugal    
+**Institution:** i3S – Instituto de Investigação e Inovação em Saúde, Porto, Portugal  
 **Language:** R
 
 ---
@@ -49,4 +51,4 @@ See any folder under `examples/` for concrete, runnable workbooks in this format
 
 ## Status
 
-Not yet released. No package, no automated test suite — each `examples/` subfolder running or knitting without error is the correctness check.
+`v1.0.0` released and archived on Zenodo (see DOI badge above). No package, no automated test suite — each `examples/` subfolder running or knitting without error is the correctness check.
