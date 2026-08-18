@@ -1,0 +1,5 @@
+sample_id,type,target_peak_id,target_purity_pct,n_peaks
+BLK_01,blk,NA,NA,0
+SMP_Synthesis1,smp,4,53.94617266689969,4
+SMP_Synthesis2,smp,4,87.81563312291125,4
+SMP_Synthesis3,smp,3,97.58076115410061,3

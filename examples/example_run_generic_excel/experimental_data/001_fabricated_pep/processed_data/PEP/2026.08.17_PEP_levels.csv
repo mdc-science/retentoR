@@ -1,0 +1,4 @@
+sample_id,peak_id,r_time,peak_area,injection_volume,volume_adjustment,peak_area_adjusted,sample_dilution,predicted_conc,final_conc,extrapolated
+SMP_A1,2,15.2,182.19,10,1,182.19,5,12.016885721296921,60.08442860648461,FALSE
+SMP_A2,2,15.2,827.01,10,1,827.01,1,55.059618372249346,55.059618372249346,TRUE
+SMP_A3,2,15.2,91.84,5,2,183.68,5,12.116345526591298,60.581727632956486,FALSE

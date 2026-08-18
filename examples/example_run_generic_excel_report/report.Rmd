@@ -1,0 +1,125 @@
+---
+title: "Compound 1 - Purity Report"
+subtitle: "Fabricated synthesis batches"
+date: "`r format(Sys.Date(), '%b %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+params:
+  rt_start: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(readxl)
+library(knitr)
+library(kableExtra)
+library(patchwork)
+library(ggthemes)
+library(conflicted)
+conflicts_prefer(dplyr::filter)
+
+# Local copy, not the repo-root original -- everything this report needs lives inside
+# this folder (see the note atop read_generic_excel_injection.R here), so it never
+# depends on paths elsewhere in the repo. Sourced by filename, not here::here(): this
+# repo has no .Rproj/.git/DESCRIPTION marker (see CLAUDE.md), so here() can't reliably
+# find a root from inside a knitted Rmd, whose working directory defaults to its own
+# folder regardless.
+source("read_generic_excel_injection.R")
+
+# Own local copy of the fabricated dataset (see build_fabricated_data.R in this same
+# folder), not a read of examples/example_run_generic_excel_purity/'s -- run
+# build_fabricated_data.R first if experimental_data/001_fabricated_synthesis/ doesn't
+# exist yet.
+experiment_dir <- "experimental_data/001_fabricated_synthesis"
+injections <- read_experiment(file.path(experiment_dir, "raw_data"))
+smp_injections <- Filter(function(inj) inj$type == "smp", injections)
+
+df_method_header <- read_excel(file.path(experiment_dir, "method.xlsx"), sheet = "Method", col_names = FALSE, n_max = 1)
+mobile_phase_a <- as.character(df_method_header[[1, 1]])
+mobile_phase_b <- as.character(df_method_header[[1, 2]])
+
+df_method <- read_excel(file.path(experiment_dir, "method.xlsx"), sheet = "Method", skip = 1)
+names(df_method) <- c("time", "pct_A", "pct_B", "flow_rate", "temperature")
+df_method <- df_method %>% mutate(across(everything(), as.numeric))
+
+df_column <- read_excel(file.path(experiment_dir, "method.xlsx"), sheet = "Column")
+
+# Top-N peaks in [rt_start, inj's own rt_window_max], as % of the area summed over that
+# same window -- NOT process_generic_excel_purity.R's output CSV, which is fixed to
+# whatever rt_window_min is baked into each workbook's Metadata sheet. This recomputes
+# it directly from the raw peak table so `params$rt_start` (tweakable at knit time via
+# rmarkdown::render(..., params = list(rt_start = ...)) or the "Knit with Parameters"
+# RStudio menu) actually changes what gets reported.
+purity_table_for <- function(inj, rt_start, top_n = 5) {
+  win <- inj$peaks %>%
+    filter(r_time >= rt_start, r_time <= inj$meta$rt_window_max)
+  total_area <- sum(win$peak_area, na.rm = TRUE)
+  win %>%
+    mutate(purity_pct = 100 * peak_area / total_area) %>%
+    arrange(desc(peak_area)) %>%
+    slice_head(n = top_n)
+}
+
+# Full chromatogram with the method's %B overlaid (scaled onto the signal axis) on the
+# left, a zoom around the peak of interest (target_rt) on the right -- same two-panel
+# layout as legacy/use case2/Rmarkdown/004_LDT_analyses.Rmd's per-sample figures.
+plot_chrom_with_method <- function(inj, df_method) {
+  chrom <- inj$chromatogram
+  scale_factor <- max(chrom$signal, na.rm = TRUE) / max(df_method$pct_B, na.rm = TRUE)
+
+  p1 <- ggplot(chrom, aes(x = time)) +
+    geom_line(data = df_method, aes(y = pct_B * scale_factor), linewidth = 0.4, color = "royalblue") +
+    geom_line(aes(y = signal), linewidth = 0.4, color = "gray15") +
+    scale_y_continuous(name = "Signal (AU)") +
+    labs(x = "Time (min)") +
+    theme_few(base_size = 10) +
+    theme(panel.background = element_rect(fill = "gray98", color = NA))
+
+  target_rt <- inj$meta$target_rt
+  p2 <- p1 +
+    coord_cartesian(xlim = c(target_rt - 3, target_rt + 6)) +
+    theme(axis.title.y = element_blank(), axis.text.y = element_blank())
+
+  (p1 + p2) + patchwork::plot_layout(widths = c(2, 1))
+}
+```
+
+## Methodology
+
+Column: `r df_column$column_name` (`r df_column$dimensions`, `r df_column$particle_size_um` um). Mobile phase: `r mobile_phase_a`; `r mobile_phase_b`. The blue trace overlaid on each chromatogram below is %B (right-hand scale omitted, rescaled onto the signal axis).
+
+Peak areas are considered from **`r params$rt_start` min** onward (the `rt_start` knit parameter -- re-knit with a different value, e.g. `rmarkdown::render("report.Rmd", params = list(rt_start = 8))`, to change what's included) through each injection's own configured window end.
+
+## Results
+
+```{r results-loop, results='asis'}
+for (inj in smp_injections) {
+
+  cat("###", inj$sample_id, "\n\n")
+
+  tab <- purity_table_for(inj, params$rt_start) %>%
+    transmute(
+      `Ret. Time (min)` = round(r_time, 2),
+      Area = peak_area,
+      `Area (%)` = round(purity_pct, 2)
+    )
+
+  print(
+    kbl(
+      tab,
+      caption = paste0("Top ", nrow(tab), " peak areas for ", inj$sample_id, " (", inj$wavelength, " nm)."),
+      booktabs = TRUE, align = c("c", "c", "c")
+    ) %>%
+      kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+      row_spec(0, bold = TRUE)
+  )
+
+  print(plot_chrom_with_method(inj, df_method))
+
+  cat("\n\n")
+}
+```
