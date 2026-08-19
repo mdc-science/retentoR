@@ -181,9 +181,15 @@ parse_shimadzu_filename <- function(fname) {
 #'   (tagged by its own `wavelength`), regardless of this argument.
 #' @param analyte,injection_date,target_rt,rt_window_min,rt_window_max,sample_dilution
 #'   Not present in the raw export -- supplied by the caller (normally via
-#'   read_shimadzu_experiment()'s metadata_file, one row per injection).
+#'   read_shimadzu_experiment()'s metadata_file, one row per injection). Left as NA/1 by
+#'   default so this function is still usable on its own (e.g. by plot_chromatograms.R,
+#'   which only needs `chromatogram`/`peaks` and doesn't care about any of these) without
+#'   requiring a metadata_file -- process_shimadzu_purity.R/std_curve.R still get them
+#'   from read_shimadzu_experiment(), which enforces they're present via metadata_file's
+#'   required columns regardless of these defaults.
 read_shimadzu_injection <- function(
-    file, analyte, injection_date, target_rt, rt_window_min, rt_window_max,
+    file, analyte = NA_character_, injection_date = NA_character_,
+    target_rt = NA_real_, rt_window_min = NA_real_, rt_window_max = NA_real_,
     wavelength = NULL, sample_dilution = 1
 ) {
   fname <- basename(file)

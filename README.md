@@ -15,7 +15,7 @@ An R workflow for processing HPLC(-DAD) chromatogram data. Given a chromatogram 
 1. **Purity** — for one injection, express each peak in a retention-time window as a percentage of the total peak area in that window.
 2. **Standard curve** — fit a calibration curve from a series of standard injections' peak area at a target retention time, back-calculate sample concentrations (correcting for injection volume and dilution), compute LoD/LoQ, and export a multi-panel summary figure.
 
-A third, standalone script draws quick-look chromatogram plots (single file or a whole folder, overlaid or faceted) without running either analysis.
+A third, standalone script draws quick-look chromatogram plots (single file or a whole folder, mixing both formats freely, overlaid or faceted) without running either analysis.
 
 The scripts are `source()`d, not installed as a package — see [`examples/`](examples/) for runnable, fully self-contained demonstrations of each.
 
@@ -33,7 +33,7 @@ retentoR/
 ├── read_shimadzu_injection.R             # Shimadzu LabSolutions .txt parser
 ├── process_shimadzu_purity.R             # purity analysis, Shimadzu input
 ├── process_shimadzu_std_curve.R          # standard curve + back-calculation + summary PDF, Shimadzu input
-├── plot_chromatograms.R                  # quick-look chromatogram plotting, standalone, generic-Excel input only so far
+├── plot_chromatograms.R                  # quick-look chromatogram plotting, standalone, both input formats
 └── examples/
     ├── example_run_generic_excel/            # standard-curve example (fabricated "PEP" standards + samples)
     ├── example_run_generic_excel_purity/     # purity-only example (fabricated synthesis batches, no standards)
@@ -74,7 +74,7 @@ experiment_dir <- here("experimental_data", "001_my_experiment")
 source(here("process_generic_excel_std_curve.R"))   # or process_generic_excel_purity.R
 ```
 
-Both scripts leave their results in `experimental_data/001_my_experiment/processed_data/<analyte>/` (see [Outputs](#outputs) below). `plot_chromatograms.R` doesn't need an experiment folder at all — point it at a single workbook or any folder of them (see its own header comment for the full argument list).
+Both scripts leave their results in `experimental_data/001_my_experiment/processed_data/<analyte>/` (see [Outputs](#outputs) below). `plot_chromatograms.R` doesn't need an experiment folder at all — point it at a single file (`.xlsx` or `.txt`) or any folder of them, and it dispatches per file on extension automatically (see its own header comment for the full argument list, including `wavelength` for disambiguating a multi-channel Shimadzu `.txt` file).
 
 ---
 
