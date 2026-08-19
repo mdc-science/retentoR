@@ -140,10 +140,13 @@ parse_shimadzu_txt <- function(file) {
 #' shared -- same STD_/SMP_/BLK_ convention, kept independent on purpose (see file
 #' header). If you fix a bug here, check the other copy too.
 parse_shimadzu_filename <- function(fname) {
+  # (^|_) rather than a plain ^ anchor -- real instrument-export filenames often prefix
+  # the type token with a date (e.g. "2025.07.03_BLK_2-propanol_01.txt"), not just place
+  # it first (e.g. the fabricated examples' "BLK_01.txt"). Both are supported.
   type <- dplyr::case_when(
-    grepl("^STD", fname, ignore.case = TRUE) ~ "std",
-    grepl("^SMP", fname, ignore.case = TRUE) ~ "smp",
-    grepl("^BLK", fname, ignore.case = TRUE) ~ "blk",
+    grepl("(^|_)STD_", fname, ignore.case = TRUE) ~ "std",
+    grepl("(^|_)SMP_", fname, ignore.case = TRUE) ~ "smp",
+    grepl("(^|_)BLK", fname, ignore.case = TRUE) ~ "blk",
     TRUE ~ NA_character_
   )
   if (is.na(type)) {

@@ -30,10 +30,13 @@ read_injection <- function(file) {
   fname <- basename(file)
   base_name <- tools::file_path_sans_ext(fname)
 
+  # (^|_) rather than a plain ^ anchor -- real instrument-export filenames often prefix
+  # the type token with a date (e.g. "2025.07.03_BLK_2-propanol_01.txt"), not just place
+  # it first (e.g. this repo's own fabricated examples' "BLK_01.xlsx"). Both supported.
   type <- dplyr::case_when(
-    grepl("^STD", fname, ignore.case = TRUE) ~ "std",
-    grepl("^SMP", fname, ignore.case = TRUE) ~ "smp",
-    grepl("^BLK", fname, ignore.case = TRUE) ~ "blk",
+    grepl("(^|_)STD_", fname, ignore.case = TRUE) ~ "std",
+    grepl("(^|_)SMP_", fname, ignore.case = TRUE) ~ "smp",
+    grepl("(^|_)BLK", fname, ignore.case = TRUE) ~ "blk",
     TRUE ~ NA_character_
   )
   if (is.na(type)) {

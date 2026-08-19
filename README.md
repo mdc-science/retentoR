@@ -38,8 +38,11 @@ retentoR/
     ├── example_run_generic_excel/            # standard-curve example (fabricated "PEP" standards + samples)
     ├── example_run_generic_excel_purity/     # purity-only example (fabricated synthesis batches, no standards)
     ├── example_run_generic_excel_report/     # narrative per-sample R Markdown report, fully self-contained
-    └── example_run_shimadzu/                 # same "PEP" scenario, as native Shimadzu .txt exports
+    ├── example_run_shimadzu/                 # same "PEP" scenario, as native Shimadzu .txt exports
+    └── example_run_shimadzu_real/             # real (anonymized) Shimadzu .txt data, not fabricated
 ```
+
+`example_run_shimadzu_real/` is real HPLC-DAD data — a genuine standard curve and sample run, not a fabricated dataset like every other example here. The only changes from the original raw export: the real project codename and the real standard's internal lab code were replaced throughout with `Compound1`/`Compound1-Std`. Nothing about the actual chromatogram traces, peak areas, or injection volumes was altered — see that folder's `run_example.R` for the specifics.
 
 Each analysis exists as two scripts — one per input format — that share everything except how the raw file gets parsed: `process_generic_excel_purity.R`/`process_shimadzu_purity.R`, and `process_generic_excel_std_curve.R`/`process_shimadzu_std_curve.R`.
 

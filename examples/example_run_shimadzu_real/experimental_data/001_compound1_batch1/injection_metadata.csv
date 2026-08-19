@@ -1,0 +1,7 @@
+filename,analyte,injection_date,target_rt,rt_window_min,rt_window_max,sample_dilution
+2025.07.03_STD_8.875_µg_01.txt,Compound1,2025.07.03,15.2,8,25,1
+2025.07.03_STD_17.75_µg_01.txt,Compound1,2025.07.03,15.2,8,25,1
+2025.07.03_STD_35.5_µg_01.txt,Compound1,2025.07.03,15.2,8,25,1
+2025.07.03_BLK_2-propanol_01.txt,Compound1,2025.07.03,15.2,8,25,1
+2025.07.03_SMP_L001_01.txt,Compound1,2025.07.03,15.2,8,25,1
+2025.07.03_SMP_L001_02.txt,Compound1,2025.07.03,15.2,8,25,1
