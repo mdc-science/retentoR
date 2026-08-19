@@ -4,6 +4,17 @@ All notable changes to this workflow are documented here. Versions correspond to
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-08-19
+
+### Added
+- `plot_chromatograms()` now supports Shimadzu `.txt` exports directly, dispatching per file on extension (`.xlsx` -> generic-Excel reader, `.txt` -> Shimadzu reader via a new `read_any_injection()` helper) — a single call can point at a folder mixing both formats. New `wavelength` argument, passed through to every `.txt` file for multi-channel disambiguation (ignored for `.xlsx`); a multi-channel file given with no `wavelength` now surfaces `read_shimadzu_injection()`'s own clear error instead of guessing.
+
+### Changed
+- `read_shimadzu_injection()`'s `analyte`/`injection_date`/`target_rt`/`rt_window_min`/`rt_window_max` arguments now default to `NA`, since `plot_chromatograms()` doesn't need any of them — `process_shimadzu_purity.R`/`process_shimadzu_std_curve.R` still get them enforced via `read_shimadzu_experiment()`'s `metadata_file`, independent of these defaults.
+
+### Fixed
+- The same wavelength-pooling bug fixed in `[1.1.0]`'s `process_*.R` scripts also existed in `plot_chromatograms()`'s own `annotate_purity_top_n` label logic (peaks ranked/summed without a `wavelength` filter) — not caught until this script was actually exercised against multi-channel data while wiring up Shimadzu support. Fixed the same way: restricted to `wavelength == inj$wavelength` before computing a total or ranking peaks.
+
 ## [1.1.0] - 2026-08-18
 
 DOI: [10.5281/zenodo.21998479](https://doi.org/10.5281/zenodo.21998479) (concept DOI, resolves to latest version: [10.5281/zenodo.21997256](https://doi.org/10.5281/zenodo.21997256)).
