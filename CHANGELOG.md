@@ -4,6 +4,17 @@ All notable changes to this workflow are documented here. Versions correspond to
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-08-19
+
+### Added
+- `examples/example_run_shimadzu_real/` — real (anonymized) HPLC-DAD data, not fabricated: a genuine 2025.07.03 standard curve (3 levels, clean 2x dilution series) plus 2 replicate injections of one real sample. The real project codename and the real standard's internal lab code were replaced throughout with `Compound1`/`Compound1-Std`; the chromatogram traces, peak tables, and injection volumes are untouched.
+
+### Fixed
+- `parse_shimadzu_filename()` (and its duplicated copies in `read_generic_excel_injection.R` and the report example) anchored STD/SMP/BLK type detection to the start of the filename, so a real date-prefixed filename (e.g. `2025.07.03_BLK_2-propanol_01.txt`) failed to parse — every fabricated fixture in this repo happens to put the type token first, so this was never caught until real data was used. Fixed in all three copies with a `(^|_)` boundary check instead of a plain `^` anchor.
+
+### Changed
+- `examples/example_run_shimadzu/`'s fabricated `.txt` fixtures now carry the full realistic LabSolutions section structure (32 `ISTD Amount` lines, full 21-column peak table, etc.) instead of the minimal subset the parser actually reads, so the fixture exercises tolerance for realistic surrounding junk. The underlying chromatogram/peak numbers are unchanged (verified byte-for-byte identical before replacing the committed files).
+
 ## [1.2.0] - 2026-08-19
 
 DOI: [10.5281/zenodo.22011043](https://doi.org/10.5281/zenodo.22011043) (concept DOI, resolves to latest version: [10.5281/zenodo.21997256](https://doi.org/10.5281/zenodo.21997256)).

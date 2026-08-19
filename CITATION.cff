@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this workflow, please cite it as below."
 title: "retentoR"
 type: software
-version: 1.2.0
+version: 1.3.0
 date-released: "2026-08-19"
 authors:
   - family-names: Moreira
