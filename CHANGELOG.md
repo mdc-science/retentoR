@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ## [1.2.0] - 2026-08-19
 
+DOI: [10.5281/zenodo.22011043](https://doi.org/10.5281/zenodo.22011043) (concept DOI, resolves to latest version: [10.5281/zenodo.21997256](https://doi.org/10.5281/zenodo.21997256)).
+
 ### Added
 - `plot_chromatograms()` now supports Shimadzu `.txt` exports directly, dispatching per file on extension (`.xlsx` -> generic-Excel reader, `.txt` -> Shimadzu reader via a new `read_any_injection()` helper) — a single call can point at a folder mixing both formats. New `wavelength` argument, passed through to every `.txt` file for multi-channel disambiguation (ignored for `.xlsx`); a multi-channel file given with no `wavelength` now surfaces `read_shimadzu_injection()`'s own clear error instead of guessing.
 
