@@ -12,6 +12,9 @@ authors:
 repository-code: "https://github.com/mdc-science/retentoR"
 identifiers:
   - type: doi
+    value: "10.5281/zenodo.22011495"
+    description: "The version-specific DOI for v1.3.0 of this workflow."
+  - type: doi
     value: "10.5281/zenodo.22011043"
     description: "The version-specific DOI for v1.2.0 of this workflow."
   - type: doi

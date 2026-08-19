@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); ver
 
 ## [1.3.0] - 2026-08-19
 
+DOI: [10.5281/zenodo.22011495](https://doi.org/10.5281/zenodo.22011495) (concept DOI, resolves to latest version: [10.5281/zenodo.21997256](https://doi.org/10.5281/zenodo.21997256)).
+
 ### Added
 - `examples/example_run_shimadzu_real/` — real (anonymized) HPLC-DAD data, not fabricated: a genuine 2025.07.03 standard curve (3 levels, clean 2x dilution series) plus 2 replicate injections of one real sample. The real project codename and the real standard's internal lab code were replaced throughout with `Compound1`/`Compound1-Std`; the chromatogram traces, peak tables, and injection volumes are untouched.
 

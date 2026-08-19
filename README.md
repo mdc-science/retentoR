@@ -238,4 +238,4 @@ All four analysis scripts write into `experimental_data/<experiment>/processed_d
 
 ## Status
 
-`v1.2.0` released and archived on Zenodo (see DOI badge above). No package, no automated test suite — each `examples/` subfolder running or knitting without error is the correctness check.
+`v1.3.0` released and archived on Zenodo (see DOI badge above). No package, no automated test suite — each `examples/` subfolder running or knitting without error is the correctness check.
