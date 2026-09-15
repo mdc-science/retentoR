@@ -120,17 +120,23 @@ std_min_y <- min(df_std$peak_area, na.rm = TRUE)
 std_max_y <- max(df_std$peak_area, na.rm = TRUE)
 
 # ---- Back-calculate sample concentrations ----
-# Each sample's peak area is scaled to what it would have been at std_injection_volume
-# before it's compared against the curve, so differing STD/SMP injection volumes don't
-# bias predicted_conc (see the injection_volume check above).
+# Interpolate on peak_area exactly as measured -- the same domain std_curve was fit on
+# -- THEN scale the resulting concentration by the injection-volume ratio. Not the other
+# way around: predict() is linear but not proportional (std_curve has a nonzero
+# intercept), so pre-multiplying peak_area by volume_adjustment and only then calling
+# predict() silently scales the intercept term too, which has no physical basis. Doing
+# it this way also keeps `extrapolated` meaningful -- it can now be judged directly
+# against the peak_area actually passed to predict(), rather than against a value
+# inflated by a volume correction that has nothing to do with whether the *measured*
+# signal fell inside the calibration's tested range.
 if (has_samples) {
   df_smp <- df_smp %>%
     dplyr::mutate(
       volume_adjustment = std_injection_volume / injection_volume,
-      peak_area_adjusted = peak_area * volume_adjustment,
-      predicted_conc = predict(std_curve, newdata = tibble(peak_area = peak_area_adjusted)),
+      apparent_conc = predict(std_curve, newdata = tibble(peak_area = peak_area)),
+      predicted_conc = apparent_conc * volume_adjustment,
       final_conc = predicted_conc * sample_dilution,
-      extrapolated = peak_area_adjusted < std_min_y * 1.1 | peak_area_adjusted > std_max_y
+      extrapolated = peak_area < std_min_y * 1.1 | peak_area > std_max_y
     )
 }
 
@@ -190,25 +196,19 @@ p_chrom_smp <- if (has_samples) {
 }
 
 # ---- Peak area vs sample_id, with LoD/LoQ + STD-range reference lines ----
-# SMP points plot at their volume-adjusted peak area (see back-calculation above), so
-# they're on the same basis as the STD-range/LoD/LoQ reference lines below — a sample
-# injected at a smaller volume than the standards shouldn't visually read as "below LoD"
-# once that's corrected for.
-injection_summary_plot <- injection_summary %>%
-  dplyr::left_join(
-    if (has_samples) dplyr::select(df_smp, sample_id, peak_area_adjusted) else tibble(sample_id = character(), peak_area_adjusted = double()),
-    by = "sample_id"
-  ) %>%
-  dplyr::mutate(peak_area_plot = dplyr::coalesce(peak_area_adjusted, peak_area))
-
-p_signal <- ggplot(injection_summary_plot, aes(x = sample_id, y = peak_area_plot)) +
+# Every point plots at its own raw, as-measured peak_area -- not volume-adjusted. This
+# panel is about whether the actual detector signal for that injection fell inside the
+# calibration's tested range, which is a question about the raw signal, not about the
+# back-calculated concentration (see the back-calculation note above for why volume
+# correction is applied to predicted_conc afterward instead).
+p_signal <- ggplot(injection_summary, aes(x = sample_id, y = peak_area)) +
   geom_point(
-    aes(fill = peak_area_plot),
+    aes(fill = peak_area),
     shape = 21, size = 2.5, stroke = 0.25, alpha = 1, color = "black"
   ) +
   scale_fill_gradient(low = color_low, high = color_high) +
   geom_point(
-    data = subset(injection_summary_plot, peak_area_plot < LOD_area | peak_area_plot > std_max_y),
+    data = subset(injection_summary, peak_area < LOD_area | peak_area > std_max_y),
     shape = 21, size = 2.5, stroke = 0.25,
     fill = "gray85", color = "gray85", alpha = 1
   ) +
@@ -325,7 +325,7 @@ if (has_samples) {
   levels_out <- df_smp %>%
     dplyr::select(
       sample_id, peak_id, r_time, peak_area, injection_volume, volume_adjustment,
-      peak_area_adjusted, sample_dilution, predicted_conc, final_conc, extrapolated
+      apparent_conc, sample_dilution, predicted_conc, final_conc, extrapolated
     )
   write_csv(levels_out, file.path(out_dir, paste0(injection_date, "_", analyte, "_levels.csv")))
 }
