@@ -36,12 +36,16 @@ read_injection <- function(file) {
   fname <- basename(file)
   base_name <- tools::file_path_sans_ext(fname)
 
-  # (^|_) rather than a plain ^ anchor -- real instrument-export filenames often prefix
-  # the type token with a date, not just place it first. Both are supported.
+  # Anchored to the start, allowing only a leading run of numeric/dot segments (a date
+  # stamp) before the type token -- not a bare "(^|_)" substring search, which matched
+  # STD_/SMP_/BLK anywhere in the filename and so misread a blank or sample whose
+  # free-text suffix happened to mention another type (e.g. a sample literally named
+  # "STD"). This still supports a date-stamp prefix, since that's numeric/dot-only, but
+  # no longer matches a type token buried in a free-text suffix.
   type <- dplyr::case_when(
-    grepl("(^|_)STD_", fname, ignore.case = TRUE) ~ "std",
-    grepl("(^|_)SMP_", fname, ignore.case = TRUE) ~ "smp",
-    grepl("(^|_)BLK", fname, ignore.case = TRUE) ~ "blk",
+    grepl("(^([0-9.]+_)*)STD_", fname, ignore.case = TRUE) ~ "std",
+    grepl("(^([0-9.]+_)*)SMP_", fname, ignore.case = TRUE) ~ "smp",
+    grepl("(^([0-9.]+_)*)BLK", fname, ignore.case = TRUE) ~ "blk",
     TRUE ~ NA_character_
   )
   if (is.na(type)) {
