@@ -4,7 +4,9 @@ All notable changes to this workflow are documented here. Versions correspond to
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.4.0] - 2026-09-15
+
+DOI: pending Zenodo archival for this release (see the concept DOI [10.5281/zenodo.21997256](https://doi.org/10.5281/zenodo.21997256), which will resolve to this version once archived).
 
 ### Added
 - `examples/example_run_shimadzu_real_2/` — a second, independent real (anonymized) HPLC-DAD dataset: a genuine standard curve (8 levels, ~2x dilution series, 2 replicates each) plus 2 replicate injections each of two extraction samples. Anonymized like `example_run_shimadzu_real/`: the real compound name and the operator's name were replaced throughout with `Compound1`/`Analyst1`. Unlike `example_run_shimadzu_real/`, STD and SMP injections here use different injection volumes (50 µL vs 10 µL), exercising the `volume_adjustment` code path in `process_shimadzu_std_curve.R` for the first time against real data — which is what surfaced the two bugs below.
