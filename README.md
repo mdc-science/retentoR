@@ -39,10 +39,11 @@ retentoR/
     ├── example_run_generic_excel_purity/     # purity-only example (fabricated synthesis batches, no standards)
     ├── example_run_generic_excel_report/     # narrative per-sample R Markdown report, fully self-contained
     ├── example_run_shimadzu/                 # same "PEP" scenario, as native Shimadzu .txt exports
-    └── example_run_shimadzu_real/             # real (anonymized) Shimadzu .txt data, not fabricated
+    ├── example_run_shimadzu_real/             # real (anonymized) Shimadzu .txt data, not fabricated
+    └── example_run_shimadzu_real_2/           # a second, independent real Shimadzu .txt dataset
 ```
 
-`example_run_shimadzu_real/` is real HPLC-DAD data — a genuine standard curve and sample run, not a fabricated dataset like every other example here. The only changes from the original raw export: the real project codename and the real standard's internal lab code were replaced throughout with `Compound1`/`Compound1-Std`. Nothing about the actual chromatogram traces, peak areas, or injection volumes was altered — see that folder's `run_example.R` for the specifics.
+`example_run_shimadzu_real/` and `example_run_shimadzu_real_2/` are real HPLC-DAD data — genuine standard curve and sample runs, not fabricated datasets like every other example here. The only changes from each original raw export: identifying strings (the real compound/project name, internal lab codes, operator names) were replaced throughout with generic placeholders (`Compound1`/`Compound1-Std`/`Analyst1`). Nothing about the actual chromatogram traces, peak areas, or injection volumes was altered — see each folder's `run_example.R` for the specifics. `example_run_shimadzu_real_2/` additionally exercises a real STD/SMP injection-volume mismatch (50 µL vs 10 µL) that `example_run_shimadzu_real/` doesn't.
 
 Each analysis exists as two scripts — one per input format — that share everything except how the raw file gets parsed: `process_generic_excel_purity.R`/`process_shimadzu_purity.R`, and `process_generic_excel_std_curve.R`/`process_shimadzu_std_curve.R`.
 
