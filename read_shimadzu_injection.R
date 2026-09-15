@@ -73,7 +73,7 @@ parse_shimadzu_txt <- function(file) {
     if (length(data_lines) == 0) return(NULL)
 
     chrom <- readr::read_tsv(
-      paste(data_lines, collapse = "\n"),
+      I(paste(data_lines, collapse = "\n")),
       col_names = c("time", "signal"),
       col_types = readr::cols(time = readr::col_double(), signal = readr::col_double()),
       progress = FALSE
@@ -120,7 +120,7 @@ parse_shimadzu_txt <- function(file) {
     if (length(peak_lines) == 0) return(NULL)
 
     readr::read_tsv(
-      paste(peak_lines, collapse = "\n"), col_names = FALSE,
+      I(paste(peak_lines, collapse = "\n")), col_names = FALSE,
       col_types = readr::cols(.default = "c"), progress = FALSE
     ) %>%
       dplyr::transmute(
@@ -130,6 +130,16 @@ parse_shimadzu_txt <- function(file) {
         wavelength = wavelength
       )
   })
+
+  # A blank (or any injection with 0 detected peaks) makes every map_dfr() iteration
+  # return NULL, so bind_rows() collapses to a 0x0 tibble with none of the expected
+  # columns -- force the empty-but-typed shape so downstream filter(r_time >= ...) etc.
+  # doesn't error out on a legitimately empty peak table.
+  if (nrow(peaks) == 0) {
+    peaks <- tibble::tibble(
+      peak_id = integer(), r_time = double(), peak_area = double(), wavelength = double()
+    )
+  }
 
   list(injection_volume = injection_volume, channels = channels, peaks = peaks)
 }
